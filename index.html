@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#020617">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Compound</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#020617;--card:#0f172a;--border:#1e293b;--muted:#64748b;--text:#f1f5f9;--sub:#94a3b8;--teal:#2dd4bf;--orange:#fb923c;--pink:#f472b6;--purple:#818cf8;--yellow:#fbbf24;--green:#34d399;--red:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:16px;min-height:100vh}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,#f1f5f9,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline}
+.badge{font-size:11px;color:var(--teal);font-family:monospace;background:rgba(45,212,191,.1);padding:3px 10px;border-radius:12px;border:1px solid rgba(45,212,191,.2);vertical-align:middle;margin-left:8px}
+.save-badge{font-size:11px;font-family:monospace;padding:3px 10px;border-radius:12px;margin-left:8px;display:none;vertical-align:middle}
+.header-row{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.subtitle{color:var(--muted);font-size:12px;max-width:340px}
+.btn-reset{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.stat-val{font-size:20px;font-weight:700;font-family:monospace;letter-spacing:-.02em}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.milestones{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.mile{display:flex;align-items:center;justify-content:space-between}
+.mile-val{font-size:15px;font-weight:700;font-family:monospace}
+.progress-wrap{margin-bottom:20px}
+.progress-labels{display:flex;justify-content:space-between;margin-bottom:4px}
+.progress-labels span{font-size:10px;font-family:monospace}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;position:relative}
+.progress-fill-nominal{position:absolute;top:0;left:0;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--teal),var(--purple),var(--pink));opacity:.4;transition:width .5s}
+.progress-fill-real{position:absolute;top:0;left:0;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--orange),var(--pink));transition:width .5s}
+.progress-legend{display:flex;gap:16px;margin-top:5px}
+.progress-legend span{font-size:10px}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 8px 8px;margin-bottom:20px}
+.chart-header{display:flex;justify-content:space-between;align-items:center;padding:0 8px;margin-bottom:8px}
+.section-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.toggles{display:flex;gap:6px}
+.toggle{border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.slider-row{display:flex;align-items:center;gap:10px;padding:0 8px;margin-bottom:8px}
+.slider-row span:first-child{font-size:11px;color:var(--muted);min-width:52px}
+.slider-row input[type=range]{flex:1;accent-color:var(--teal)}
+.slider-row .val{font-size:13px;font-family:monospace;font-weight:600;min-width:40px;text-align:right}
+canvas{width:100%;border-radius:8px}
+.chart-legend{display:flex;justify-content:center;gap:16px;padding-top:8px;flex-wrap:wrap}
+.chart-legend div{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)}
+.chart-legend .swatch{width:14px;height:3px;border-radius:2px}
+.acct-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.btn-add{background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.2);color:var(--teal);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer}
+.acct-card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px}
+.acct-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.acct-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px}
+.acct-name{background:transparent;border:none;color:var(--text);font-size:16px;font-weight:600;outline:none;width:140px;font-family:inherit}
+.btn-del{background:var(--border);border:1px solid rgba(239,68,68,.2);color:var(--red);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.acct-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.field label{display:block;font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.field .input-wrap{display:flex;align-items:center;background:var(--border);border-radius:8px;border:1px solid #334155;padding:0 10px}
+.field .input-wrap span{color:var(--muted);font-size:13px}
+.field input[type=number]{background:transparent;border:none;color:#e2e8f0;font-size:14px;font-family:monospace;padding:9px 0;width:100%;outline:none;-moz-appearance:textfield}
+.field input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:20px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:11px;font-family:monospace;min-width:480px}
+th{text-align:right;padding:6px 8px;font-size:10px;border-bottom:1px solid var(--border);font-weight:500}
+th:first-child{text-align:left}
+td{padding:7px 8px;border-bottom:1px solid var(--bg)}
+td:first-child{color:var(--sub)}
+td{text-align:right;color:#cbd5e1}
+.footer{text-align:center;padding:20px 0;color:#334155;font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="margin-bottom:24px">
+    <div><h1>Compound</h1><span class="badge">portfolio modeler</span><span class="save-badge" id="saveBadge"></span></div>
+    <div class="header-row">
+      <p class="subtitle">Retirement growth with inflation-adjusted projections. Auto-saves locally.</p>
+      <button class="btn-reset" onclick="resetAll()">Reset</button>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="milestones" id="milestones"></div>
+  <div class="progress-wrap" id="progressWrap"></div>
+  <div class="chart-box">
+    <div class="chart-header">
+      <span class="section-label">Projection</span>
+      <div class="toggles">
+        <button class="toggle" id="togNominal" onclick="toggleNominal()">Nominal</button>
+        <button class="toggle" id="togReal" onclick="toggleReal()">Real</button>
+      </div>
+    </div>
+    <div class="slider-row">
+      <span>Timeline</span>
+      <input type="range" min="5" max="40" id="sliderYears" oninput="setYears(this.value)">
+      <span class="val" id="valYears" style="color:var(--teal)"></span>
+    </div>
+    <div class="slider-row">
+      <span>Inflation</span>
+      <input type="range" min="0" max="6" step="0.5" id="sliderInflation" oninput="setInflation(this.value)" style="accent-color:var(--orange)">
+      <span class="val" id="valInflation" style="color:var(--orange)"></span>
+    </div>
+    <canvas id="chart" height="280"></canvas>
+    <div class="chart-legend" id="chartLegend"></div>
+  </div>
+  <div class="acct-header">
+    <span class="section-label">Accounts</span>
+    <button class="btn-add" onclick="addAccount()">+ Add</button>
+  </div>
+  <div id="accountsList"></div>
+  <div class="table-wrap">
+    <div class="section-label" style="margin-bottom:12px;padding-left:8px">Year-by-Year</div>
+    <table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table>
+  </div>
+  <div class="footer" id="footer"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'compound-v4';
+const ACCT_COLORS = {"401(k)":"#2dd4bf","Roth IRA":"#f472b6","Brokerage":"#818cf8","HSA":"#fbbf24","529 Plan":"#34d399","Traditional IRA":"#fb923c"};
+const getC = n => ACCT_COLORS[n] || '#818cf8';
+
+let state = {
+  accounts: [
+    {id:1,name:"401(k)",balance:150000,monthly:1875,annualBonus:5000,returnRate:8.5},
+    {id:2,name:"Roth IRA",balance:45000,monthly:583,annualBonus:0,returnRate:8.5},
+    {id:3,name:"Brokerage",balance:80000,monthly:1000,annualBonus:10000,returnRate:7.5}
+  ],
+  years: 25,
+  inflation: 3.0,
+  nextId: 4,
+  showNominal: true,
+  showReal: true
+};
+
+let saveTimeout = null;
+
+function load() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const p = JSON.parse(s);
+      if (p.accounts && p.accounts.length > 0) {
+        state = {...state, ...p};
+        showSave('Restored', '#818cf8');
+      }
+    }
+  } catch(e) {}
+}
+
+function save() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        accounts: state.accounts, years: state.years, inflation: state.inflation, nextId: state.nextId
+      }));
+      showSave('Saved', '#2dd4bf');
+    } catch(e) {
+      showSave('Error', '#ef4444');
+    }
+  }, 600);
+}
+
+function showSave(text, color) {
+  const el = document.getElementById('saveBadge');
+  el.textContent = text;
+  el.style.display = 'inline';
+  el.style.color = color;
+  el.style.background = color + '15';
+  el.style.border = '1px solid ' + color + '30';
+  setTimeout(() => { el.style.display = 'none'; }, 1500);
+}
+
+const fmt = v => v >= 1e6 ? '$'+(v/1e6).toFixed(2)+'M' : v >= 1e3 ? '$'+(v/1e3).toFixed(0)+'K' : '$'+v.toFixed(0);
+const fmtF = v => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(v);
+
+function project() {
+  const {accounts, years, inflation} = state;
+  const data = [];
+  const bals = accounts.map(a => a.balance);
+  for (let y = 0; y <= years; y++) {
+    const row = {year: y};
+    let total = 0;
+    accounts.forEach((acc, i) => {
+      row[acc.name] = Math.round(bals[i]);
+      total += bals[i];
+      if (y < years) {
+        const mr = acc.returnRate / 100 / 12;
+        for (let m = 0; m < 12; m++) bals[i] = bals[i] * (1 + mr) + acc.monthly;
+        bals[i] += acc.annualBonus;
+      }
+    });
+    row.Total = Math.round(total);
+    row.RealTotal = Math.round(total / Math.pow(1 + inflation / 100, y));
+    data.push(row);
+  }
+  return data;
+}
+
+function drawChart(data) {
+  const canvas = document.getElementById('chart');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const W = rect.width - 16;
+  const H = 280;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = {top: 10, right: 10, bottom: 30, left: 58};
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+
+  // Find max
+  let maxVal = 0;
+  data.forEach(d => {
+    if (state.showNominal && d.Total > maxVal) maxVal = d.Total;
+    if (state.showReal && d.RealTotal > maxVal) maxVal = d.RealTotal;
+  });
+  maxVal = maxVal * 1.1 || 100;
+
+  const xScale = i => pad.left + (i / (data.length - 1)) * cw;
+  const yScale = v => pad.top + ch - (v / maxVal) * ch;
+
+  // Grid lines
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  const gridLines = 5;
+  for (let i = 0; i <= gridLines; i++) {
+    const y = pad.top + (i / gridLines) * ch;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(W - pad.right, y);
+    ctx.stroke();
+    // Label
+    const val = maxVal * (1 - i / gridLines);
+    ctx.fillStyle = '#475569';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(fmt(val), pad.left - 6, y + 4);
+  }
+
+  // X labels
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#475569';
+  const step = Math.max(1, Math.floor(data.length / 8));
+  for (let i = 0; i < data.length; i += step) {
+    ctx.fillText('Yr ' + data[i].year, xScale(i), H - 8);
+  }
+  // Always show last
+  ctx.fillText('Yr ' + data[data.length-1].year, xScale(data.length-1), H - 8);
+
+  // Draw stacked areas for nominal accounts
+  if (state.showNominal) {
+    const accts = state.accounts;
+    // Build stacked values
+    const stacked = data.map((d, di) => {
+      let cumulative = 0;
+      const vals = accts.map(a => {
+        cumulative += (d[a.name] || 0);
+        return cumulative;
+      });
+      return vals;
+    });
+
+    for (let ai = accts.length - 1; ai >= 0; ai--) {
+      const color = getC(accts[ai].name);
+      ctx.beginPath();
+      // Top line
+      for (let i = 0; i < data.length; i++) {
+        const x = xScale(i);
+        const y = yScale(stacked[i][ai]);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      // Bottom line (previous stack or baseline)
+      for (let i = data.length - 1; i >= 0; i--) {
+        const x = xScale(i);
+        const y = ai > 0 ? yScale(stacked[i][ai - 1]) : yScale(0);
+        ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = color + '30';
+      ctx.fill();
+
+      // Stroke top
+      ctx.beginPath();
+      for (let i = 0; i < data.length; i++) {
+        const x = xScale(i);
+        const y = yScale(stacked[i][ai]);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // Draw real total line
+  if (state.showReal) {
+    ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+      const x = xScale(i);
+      const y = yScale(data[i].RealTotal);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#fb923c';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Fill under
+    ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+      const x = xScale(i);
+      const y = yScale(data[i].RealTotal);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.lineTo(xScale(data.length-1), yScale(0));
+    ctx.lineTo(xScale(0), yScale(0));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(251,146,60,0.08)';
+    ctx.fill();
+  }
+
+  // Tooltip on touch/hover
+  canvas.onpointermove = canvas.onclick = function(e) {
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX - r.left;
+    const idx = Math.round(((mx - pad.left) / cw) * (data.length - 1));
+    if (idx < 0 || idx >= data.length) return;
+    // Redraw + highlight
+    drawChart(data);
+    const d = data[idx];
+    const x = xScale(idx);
+    // Vertical line
+    const c2 = canvas.getContext('2d');
+    c2.save();
+    c2.scale(dpr, dpr);
+    c2.strokeStyle = '#334155';
+    c2.lineWidth = 1;
+    c2.setLineDash([3,3]);
+    c2.beginPath();
+    c2.moveTo(x, pad.top);
+    c2.lineTo(x, pad.top + ch);
+    c2.stroke();
+    c2.setLineDash([]);
+    // Tooltip box
+    const tx = Math.min(x + 10, W - 160);
+    const ty = 20;
+    c2.fillStyle = 'rgba(15,23,42,0.95)';
+    c2.strokeStyle = '#334155';
+    c2.lineWidth = 1;
+    const lines = ['Year ' + d.year];
+    if (state.showNominal) lines.push('Nominal: ' + fmtF(d.Total));
+    if (state.showReal) lines.push('Real: ' + fmtF(d.RealTotal));
+    const bh = lines.length * 18 + 12;
+    c2.beginPath();
+    c2.roundRect(tx, ty, 148, bh, 6);
+    c2.fill();
+    c2.stroke();
+    c2.font = '11px monospace';
+    lines.forEach((l, i) => {
+      c2.fillStyle = i === 0 ? '#94a3b8' : i === 1 ? '#2dd4bf' : '#fb923c';
+      c2.textAlign = 'left';
+      c2.fillText(l, tx + 10, ty + 18 + i * 18);
+    });
+    c2.restore();
+    canvas.onpointermove = null; // prevent recursion, re-binds on next draw
+  };
+}
+
+function renderStats(data) {
+  const {accounts, years, inflation} = state;
+  const totalStart = accounts.reduce((s,a) => s+a.balance, 0);
+  const totalMonthly = accounts.reduce((s,a) => s+a.monthly, 0);
+  const last = data[data.length-1];
+  const totalContrib = totalStart + totalMonthly*12*years + accounts.reduce((s,a)=>s+a.annualBonus,0)*years;
+  const growth = last.Total - totalContrib;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-label">Portfolio</div><div class="stat-val" style="color:var(--text)">${fmt(totalStart)}</div><div class="stat-sub">Starting</div></div>
+    <div class="stat"><div class="stat-label">Monthly</div><div class="stat-val" style="color:var(--text)">${fmt(totalMonthly)}</div><div class="stat-sub">All accounts</div></div>
+    <div class="stat"><div class="stat-label">Nominal (${years}yr)</div><div class="stat-val" style="color:var(--teal)">${fmt(last.Total)}</div><div class="stat-sub">${fmt(growth)} growth</div></div>
+    <div class="stat"><div class="stat-label">Real (${years}yr)</div><div class="stat-val" style="color:var(--orange)">${fmt(last.RealTotal)}</div><div class="stat-sub">Today's dollars</div></div>
+  `;
+
+  const m1 = data.find(d => d.Total >= 1e6);
+  const m1r = data.find(d => d.RealTotal >= 1e6);
+  document.getElementById('milestones').innerHTML = `
+    <div class="stat mile"><div><div class="stat-label">Nominal $1M</div><div class="mile-val" style="color:var(--teal)">${m1?'Year '+m1.year:'>'+years+'yr'}</div></div><div style="font-size:11px;color:var(--muted);font-family:monospace">${m1?fmtF(m1.Total):'—'}</div></div>
+    <div class="stat mile"><div><div class="stat-label">Real $1M</div><div class="mile-val" style="color:var(--orange)">${m1r?'Year '+m1r.year:'>'+years+'yr'}</div></div><div style="font-size:11px;color:var(--muted);font-family:monospace">${m1r?fmtF(m1r.RealTotal):'—'}</div></div>
+  `;
+
+  const ms = [5e5,1e6,2e6,5e6];
+  document.getElementById('progressWrap').innerHTML = `
+    <div class="progress-labels">${ms.map(m=>`<span style="color:${last.Total>=m?'var(--teal)':'var(--muted)'}; font-weight:${last.Total>=m?600:400}">${fmt(m)}</span>`).join('')}</div>
+    <div class="progress-bar">
+      <div class="progress-fill-nominal" style="width:${Math.min(last.Total/5e6,1)*100}%"></div>
+      <div class="progress-fill-real" style="width:${Math.min(last.RealTotal/5e6,1)*100}%"></div>
+    </div>
+    <div class="progress-legend"><span style="color:var(--orange)">Real: ${fmt(last.RealTotal)}</span><span style="color:var(--teal);opacity:.5">Nominal: ${fmt(last.Total)}</span></div>
+  `;
+}
+
+function renderAccounts() {
+  const container = document.getElementById('accountsList');
+  container.innerHTML = state.accounts.map(acc => {
+    const c = getC(acc.name);
+    return `<div class="acct-card" style="border-color:${c}33">
+      <div class="acct-top">
+        <div><span class="acct-dot" style="background:${c}"></span><input class="acct-name" value="${acc.name}" onchange="updateAcct(${acc.id},'name',this.value)"></div>
+        <button class="btn-del" onclick="removeAcct(${acc.id})">✕</button>
+      </div>
+      <div class="acct-fields">
+        <div class="field"><label>Balance</label><div class="input-wrap"><span>$</span><input type="number" inputmode="decimal" value="${acc.balance}" onchange="updateAcct(${acc.id},'balance',+this.value)"></div></div>
+        <div class="field"><label>Monthly</label><div class="input-wrap"><span>$</span><input type="number" inputmode="decimal" value="${acc.monthly}" onchange="updateAcct(${acc.id},'monthly',+this.value)"></div></div>
+        <div class="field"><label>Annual Bonus</label><div class="input-wrap"><span>$</span><input type="number" inputmode="decimal" value="${acc.annualBonus}" onchange="updateAcct(${acc.id},'annualBonus',+this.value)"></div></div>
+        <div class="field"><label>Return %</label><div class="input-wrap"><input type="number" inputmode="decimal" value="${acc.returnRate}" onchange="updateAcct(${acc.id},'returnRate',+this.value)"><span>%</span></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTable(data) {
+  const {accounts, years} = state;
+  const step = Math.max(1, Math.floor(years / 12));
+  const rows = data.filter((_, i) => i % step === 0 || i === data.length - 1);
+
+  document.getElementById('tableHead').innerHTML = `<tr>
+    <th style="text-align:left;color:var(--muted)">Yr</th>
+    ${accounts.map(a => `<th style="color:${getC(a.name)}">${a.name}</th>`).join('')}
+    <th style="color:var(--teal);font-weight:600">Nominal</th>
+    <th style="color:var(--orange);font-weight:600">Real</th>
+  </tr>`;
+
+  document.getElementById('tableBody').innerHTML = rows.map(r => `<tr>
+    <td>${r.year}</td>
+    ${accounts.map(a => `<td>${fmtF(r[a.name]||0)}</td>`).join('')}
+    <td style="color:var(--teal);font-weight:600">${fmtF(r.Total)}</td>
+    <td style="color:var(--orange);font-weight:600">${fmtF(r.RealTotal)}</td>
+  </tr>`).join('');
+}
+
+function renderToggles() {
+  const n = document.getElementById('togNominal');
+  const r = document.getElementById('togReal');
+  n.style.background = state.showNominal ? 'rgba(45,212,191,.15)' : 'transparent';
+  n.style.border = '1px solid ' + (state.showNominal ? 'rgba(45,212,191,.4)' : '#334155');
+  n.style.color = state.showNominal ? '#2dd4bf' : '#64748b';
+  r.style.background = state.showReal ? 'rgba(251,146,60,.15)' : 'transparent';
+  r.style.border = '1px solid ' + (state.showReal ? 'rgba(251,146,60,.4)' : '#334155');
+  r.style.color = state.showReal ? '#fb923c' : '#64748b';
+}
+
+function renderLegend() {
+  let html = '';
+  if (state.showNominal) {
+    state.accounts.forEach(a => {
+      html += `<div><div class="swatch" style="background:${getC(a.name)}"></div>${a.name}</div>`;
+    });
+  }
+  if (state.showReal) html += `<div><div class="swatch" style="background:var(--orange);border-top:1px dashed var(--orange)"></div>Real (Today's $)</div>`;
+  document.getElementById('chartLegend').innerHTML = html;
+}
+
+function renderAll() {
+  document.getElementById('sliderYears').value = state.years;
+  document.getElementById('valYears').textContent = state.years + 'yr';
+  document.getElementById('sliderInflation').value = state.inflation;
+  document.getElementById('valInflation').textContent = state.inflation + '%';
+  document.getElementById('footer').textContent = `Projections are hypothetical. Does not account for taxes or volatility. Real values use ${state.inflation}% inflation. Consult a financial advisor.`;
+
+  const data = project();
+  renderStats(data);
+  renderAccounts();
+  renderTable(data);
+  renderToggles();
+  renderLegend();
+  drawChart(data);
+  save();
+}
+
+function setYears(v) { state.years = parseInt(v); renderAll(); }
+function setInflation(v) { state.inflation = parseFloat(v); renderAll(); }
+function toggleNominal() { state.showNominal = !state.showNominal; renderAll(); }
+function toggleReal() { state.showReal = !state.showReal; renderAll(); }
+
+function updateAcct(id, field, val) {
+  const a = state.accounts.find(a => a.id === id);
+  if (a) { a[field] = val; renderAll(); }
+}
+
+function removeAcct(id) {
+  state.accounts = state.accounts.filter(a => a.id !== id);
+  renderAll();
+}
+
+function addAccount() {
+  const opts = ["Traditional IRA","HSA","529 Plan","Taxable","SEP IRA"];
+  const used = state.accounts.map(a => a.name);
+  const name = opts.find(n => !used.includes(n)) || 'Account ' + state.nextId;
+  state.accounts.push({id: state.nextId, name, balance: 0, monthly: 500, annualBonus: 0, returnRate: 7.5});
+  state.nextId++;
+  renderAll();
+}
+
+function resetAll() {
+  state = {
+    accounts: [
+      {id:1,name:"401(k)",balance:150000,monthly:1875,annualBonus:5000,returnRate:8.5},
+      {id:2,name:"Roth IRA",balance:45000,monthly:583,annualBonus:0,returnRate:8.5},
+      {id:3,name:"Brokerage",balance:80000,monthly:1000,annualBonus:10000,returnRate:7.5}
+    ],
+    years:25, inflation:3.0, nextId:4, showNominal:true, showReal:true
+  };
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  renderAll();
+}
+
+// Init
+load();
+renderAll();
+window.addEventListener('resize', () => { drawChart(project()); });
+
+// Register SW
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
